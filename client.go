@@ -136,7 +136,7 @@ func (n *NetlinkClient) Receive() (*syscall.NetlinkMessage, error) {
 // KeepConnection re-establishes our connection to the netlink socket
 func (n *NetlinkClient) KeepConnection() {
 	payload := &AuditStatusPayload{
-		Mask:    4,
+		Mask:    5, // AUDIT_STATUS_ENABLED | AUDIT_STATUS_PID
 		Enabled: 1,
 		Pid:     uint32(syscall.Getpid()),
 		//TODO: Failure: http://lxr.free-electrons.com/source/include/uapi/linux/audit.h#L338
@@ -153,3 +153,10 @@ func (n *NetlinkClient) KeepConnection() {
 		el.Println("Error occurred while trying to keep the connection:", err)
 	}
 }
+
+// func (n *NetlinkClient) AuditEnable() {
+// 	payload := &AuditStatusPayload{
+// 		Mask: 1 //AUDIT_STATUS_ENABLED
+// 		Enabled: 1
+// 	}
+// }
