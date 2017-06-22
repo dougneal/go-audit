@@ -329,6 +329,9 @@ func main() {
 	}
 
 	nlClient := NewNetlinkClient(config.GetInt("socket_buffer.receive"))
+	nlClient.AuditSetPid()
+	nlClient.AuditSetEnabled()
+
 	marshaller := NewAuditMarshaller(
 		writer,
 		uint16(config.GetInt("events.min")),

@@ -71,13 +71,6 @@ func NewNetlinkClient(recvSize int) *NetlinkClient {
 		l.Println("Socket receive buffer size:", v)
 	}
 
-	go func() {
-		for {
-			n.KeepConnection()
-			time.Sleep(time.Second * 5)
-		}
-	}()
-
 	return n
 }
 
@@ -133,15 +126,14 @@ func (n *NetlinkClient) Receive() (*syscall.NetlinkMessage, error) {
 	return msg, nil
 }
 
-// KeepConnection re-establishes our connection to the netlink socket
-func (n *NetlinkClient) KeepConnection() {
-	payload := &AuditStatusPayload{
-		Mask:    5, // AUDIT_STATUS_ENABLED | AUDIT_STATUS_PID
-		Enabled: 1,
-		Pid:     uint32(syscall.Getpid()),
-		//TODO: Failure: http://lxr.free-electrons.com/source/include/uapi/linux/audit.h#L338
+//TODO return err
+func (n *NetlinkClient) AuditSetPid() {
+	payload := AuditStatusPayload{
+		Mask: 4, // AUDIT_STATUS_PID
+		Pid:  uint32(syscall.Getpid()),
 	}
 
+	// TODO move packet header construction into Send() ?
 	packet := &NetlinkPacket{
 		Type:  uint16(1001),
 		Flags: syscall.NLM_F_REQUEST | syscall.NLM_F_ACK,
@@ -150,13 +142,26 @@ func (n *NetlinkClient) KeepConnection() {
 
 	err := n.Send(packet, payload)
 	if err != nil {
-		el.Println("Error occurred while trying to keep the connection:", err)
+		el.Println("Error occurred writing to netlink socket:", err)
 	}
 }
 
-// func (n *NetlinkClient) AuditEnable() {
-// 	payload := &AuditStatusPayload{
-// 		Mask: 1 //AUDIT_STATUS_ENABLED
-// 		Enabled: 1
-// 	}
-// }
+//TODO return err
+func (n *NetlinkClient) AuditSetEnabled() {
+	payload := &AuditStatusPayload{
+		Mask:    1, // AUDIT_STATUS_ENABLED
+		Enabled: 1,
+	}
+
+	// TODO move packet header construction into Send() ?
+	packet := &NetlinkPacket{
+		Type:  uint16(1001),
+		Flags: syscall.NLM_F_REQUEST | syscall.NLM_F_ACK,
+		Pid:   uint32(syscall.Getpid()),
+	}
+
+	err := n.Send(packet, payload)
+	if err != nil {
+		el.Println("Error occurred writing to netlink socket:", err)
+	}
+}
